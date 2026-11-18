@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions - ExpenseTracker PKR{% endblock %}
+{% block page_title %}Transaction Management{% endblock %}
+{% block page_subtitle %}Search, filter, edit and track all your income and expenses{% endblock %}
+
+{% block content %}
+<div class="transactions-container">
+
+    <!-- Top Action & Summary Bar -->
+    <div class="trans-top-bar">
+        <div class="trans-summary-cards">
+            <div class="trans-mini-card bg-mini-blue">
+                <span class="mini-label">Total Records</span>
+                <span class="mini-value" id="filteredCount">0</span>
+            </div>
+            <div class="trans-mini-card bg-mini-green">
+                <span class="mini-label">Filtered Income</span>
+                <span class="mini-value text-success" id="filteredIncome">Rs. 0.00</span>
+            </div>
+            <div class="trans-mini-card bg-mini-red">
+                <span class="mini-label">Filtered Expenses</span>
+                <span class="mini-value text-danger" id="filteredExpense">Rs. 0.00</span>
+            </div>
+            <div class="trans-mini-card bg-mini-purple">
+                <span class="mini-label">Net Balance</span>
+                <span class="mini-value text-primary" id="filteredNet">Rs. 0.00</span>
+            </div>
+        </div>
+
+        <div class="trans-btn-actions">
+            <a href="/api/export-csv" class="btn btn-outline-secondary" title="Export as CSV">
+                <i class="fa-solid fa-file-arrow-down"></i> Export CSV
+            </a>
+            <button class="btn btn-outline-success" onclick="openAddModal('income')">
+                <i class="fa-solid fa-plus"></i> Add Income
+            </button>
+            <button class="btn btn-primary" onclick="openAddModal('expense')">
+                <i class="fa-solid fa-plus"></i> Add Expense
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="content-card filter-card">
+        <div class="card-body">
+            <div class="filters-grid">
+                <!-- Search Input -->
+                <div class="filter-item search-filter">
+                    <label class="filter-label">Search Description / Category</label>
+                    <div class="search-input-wrap">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search keywords..." oninput="debounceFilter()">
+                    </div>
+                </div>
+
+                <!-- Type Filter -->
+                <div class="filter-item">
+                    <label class="filter-label">Transaction Type</label>
+                    <select id="typeFilter" class="form-control" onchange="loadTransactionsTable()">
+                        <option value="">All Types (Income & Expense)</option>
+                        <option value="expense">Expenses Only</option>
+                        <option value="income">Income Only</option>
+                    </select>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="filter-item">
+                    <label class="filter-label">Category</label>
+                    <select id="categoryFilter" class="form-control" onchange="loadTransactionsTable()">
+                        <option value="">All Categories</option>
+                        <optgroup label="Expense Categories">
+                            {% for cat in expense_categories %}
+                            <option value="{{ cat }}">{{ cat }}</option>
+                            {% endfor %}
+                        </optgroup>
+                        <optgroup label="Income Categories">
+                            {% for cat in income_categories %}
+                            <option value="{{ cat }}">{{ cat }}</option>
+                            {% endfor %}
+                        </optgroup>
+                    </select>
+                </div>
+
+                <!-- Sort Filter -->
+                <div class="filter-item">
+                    <label class="filter-label">Sort Order</label>
+                    <select id="sortFilter" class="form-control" onchange="loadTransactionsTable()">
+                        <option value="date_desc">Date: Newest First</option>
+                        <option value="date_asc">Date: Oldest First</option>
+                        <option value="amount_desc">Amount: Highest First</option>
+                        <option value="amount_asc">Amount: Lowest First</option>
+                    </select>
+                </div>
+
+                <!-- Date Range Filters -->
+                <div class="filter-item date-filter-item">
+                    <label class="filter-label">From Date</label>
+                    <input type="date" id="startDateFilter" class="form-control" onchange="loadTransactionsTable()">
+                </div>
+                <div class="filter-item date-filter-item">
+                    <label class="filter-label">To Date</label>
+                    <input type="date" id="endDateFilter" class="form-control" onchange="loadTransactionsTable()">
+                </div>
+            </div>
+
+            <!-- Quick Date Filter Pills -->
+            <div class="quick-filter-pills">
+                <span class="pills-label">Quick Presets:</span>
+                <button type="button" class="preset-pill active" onclick="setPresetDateRange('all', this)">All Time</button>
+                <button type="button" class="preset-pill" onclick="setPresetDateRange('today', this)">Today</button>
+                <button type="button" class="preset-pill" onclick="setPresetDateRange('this_week', this)">This Week</button>
+                <button type="button" class="preset-pill" onclick="setPresetDateRange('this_month', this)">This Month</button>
+                <button type="button" class="preset-pill" onclick="setPresetDateRange('this_year', this)">This Year</button>
+                <button type="button" class="btn-link-reset" onclick="resetAllFilters()">Reset Filters</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions Data Table Card -->
+    <div class="content-card mt-4">
+        <div class="card-header">
+            <div class="card-title-group">
+                <h3 class="card-title">Transactions Ledger</h3>
+                <p class="card-subtitle" id="tableStatusSubtitle">Showing all transaction records</p>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="custom-table" id="transactionsTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 130px;">Date</th>
+                            <th style="width: 110px;">Type</th>
+                            <th style="width: 160px;">Category</th>
+                            <th>Description</th>
+                            <th class="text-right" style="width: 170px;">Amount (PKR)</th>
+                            <th class="text-center" style="width: 120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsTableBody">
+                        <!-- Populated dynamically via JS -->
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="loading-spinner">
+                                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                                    <span>Loading transactions...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State Container (Displayed if no records) -->
+            <div class="empty-state d-none" id="emptyTransactionsState">
+                <div class="empty-state-icon">
+                    <i class="fa-solid fa-money-check-dollar"></i>
+                </div>
+                <h3 class="empty-state-title">No Transactions Found</h3>
+                <p class="empty-state-text">No records match your selected filters. Try resetting the filters or record a new transaction.</p>
+                <div class="empty-state-actions">
+                    <button class="btn btn-outline-secondary" onclick="resetAllFilters()">Reset Filters</button>
+                    <button class="btn btn-primary" onclick="openAddModal('expense')">
+                        <i class="fa-solid fa-plus"></i> Add Expense
+                    </button>
+                    <button class="btn btn-success" onclick="openAddModal('income')">
+                        <i class="fa-solid fa-plus"></i> Add Income
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let filterDebounceTimer;
+
+    function debounceFilter() {
+        clearTimeout(filterDebounceTimer);
+        filterDebounceTimer = setTimeout(loadTransactionsTable, 300);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTransactionsTable();
+    });
+</script>
+{% endblock %}

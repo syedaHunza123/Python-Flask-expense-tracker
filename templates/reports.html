@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics & Reports - ExpenseTracker PKR{% endblock %}
+{% block page_title %}Financial Analytics & Reports{% endblock %}
+{% block page_subtitle %}In-depth insights, spending breakdowns, and cash flow trends in PKR{% endblock %}
+
+{% block content %}
+<div class="reports-container">
+
+    <!-- Report Timeframe Navigation Bar -->
+    <div class="content-card mb-4">
+        <div class="card-body py-3">
+            <div class="reports-control-bar">
+                <div class="timeframe-buttons">
+                    <button class="timeframe-btn" data-timeframe="daily" onclick="setTimeframe('daily', this)">
+                        <i class="fa-solid fa-calendar-day"></i> Daily (Last 30 Days)
+                    </button>
+                    <button class="timeframe-btn" data-timeframe="weekly" onclick="setTimeframe('weekly', this)">
+                        <i class="fa-solid fa-calendar-week"></i> Weekly
+                    </button>
+                    <button class="timeframe-btn active" data-timeframe="monthly" onclick="setTimeframe('monthly', this)">
+                        <i class="fa-solid fa-calendar"></i> Monthly
+                    </button>
+                    <button class="timeframe-btn" data-timeframe="yearly" onclick="setTimeframe('yearly', this)">
+                        <i class="fa-solid fa-chart-line"></i> Yearly
+                    </button>
+                </div>
+
+                <div class="year-selector-wrap" id="yearSelectorContainer">
+                    <label class="control-label">Year:</label>
+                    <select id="reportYearSelect" class="form-control" onchange="loadReportsData()">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026" selected>2026</option>
+                        <option value="2027">2027</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics High-Level Summary Metrics -->
+    <div class="metrics-grid">
+        <div class="metric-card card-income">
+            <div class="metric-card-inner">
+                <div class="metric-info">
+                    <span class="metric-label">Period Total Income</span>
+                    <h2 class="metric-value text-success" id="reportTotalIncome">Rs. 0.00</h2>
+                    <span class="subtext-muted">Earned in selected period</span>
+                </div>
+                <div class="metric-icon-wrap icon-income">
+                    <i class="fa-solid fa-arrow-down"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="metric-card card-expense">
+            <div class="metric-card-inner">
+                <div class="metric-info">
+                    <span class="metric-label">Period Total Expense</span>
+                    <h2 class="metric-value text-danger" id="reportTotalExpense">Rs. 0.00</h2>
+                    <span class="subtext-muted">Spent in selected period</span>
+                </div>
+                <div class="metric-icon-wrap icon-expense">
+                    <i class="fa-solid fa-arrow-up"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="metric-card card-savings">
+            <div class="metric-card-inner">
+                <div class="metric-info">
+                    <span class="metric-label">Net Savings</span>
+                    <h2 class="metric-value text-primary" id="reportNetSavings">Rs. 0.00</h2>
+                    <span class="badge" id="reportSavingsRate">0% Savings Rate</span>
+                </div>
+                <div class="metric-icon-wrap icon-savings">
+                    <i class="fa-solid fa-vault"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="metric-card card-balance">
+            <div class="metric-card-inner">
+                <div class="metric-info">
+                    <span class="metric-label">Top Expense Category</span>
+                    <h2 class="metric-value text-dark" id="reportTopCategory">None</h2>
+                    <span class="subtext-muted" id="reportTopAmount">Rs. 0.00</span>
+                </div>
+                <div class="metric-icon-wrap icon-balance">
+                    <i class="fa-solid fa-fire"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Comparison Chart: Income vs Expense Trend -->
+    <div class="content-card mt-4">
+        <div class="card-header">
+            <div class="card-title-group">
+                <h3 class="card-title" id="reportTrendTitle">Income vs Expense Trend</h3>
+                <p class="card-subtitle">Cash flow timeline analysis for the selected period</p>
+            </div>
+        </div>
+        <div class="card-body chart-body">
+            <div class="chart-canvas-wrapper" style="height: 340px;">
+                <canvas id="reportsTrendChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Breakdown Charts Section: 2 Columns -->
+    <div class="dashboard-grid-2 mt-4">
+        <!-- Expense Breakdown Chart & Stats -->
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <h3 class="card-title">Expense Distribution</h3>
+                    <p class="card-subtitle">Spending proportion by category</p>
+                </div>
+            </div>
+            <div class="card-body chart-body category-breakdown-body">
+                <div class="donut-wrapper">
+                    <canvas id="reportsExpenseDonut"></canvas>
+                </div>
+                <div class="category-legend-list" id="reportExpenseLegend">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Income Sources Breakdown Chart & Stats -->
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <h3 class="card-title">Income Sources</h3>
+                    <p class="card-subtitle">Earnings distribution across income channels</p>
+                </div>
+            </div>
+            <div class="card-body chart-body category-breakdown-body">
+                <div class="donut-wrapper">
+                    <canvas id="reportsIncomeDonut"></canvas>
+                </div>
+                <div class="category-legend-list" id="reportIncomeLegend">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category-Wise Expense Detailed Table -->
+    <div class="content-card mt-4">
+        <div class="card-header">
+            <div class="card-title-group">
+                <h3 class="card-title">Category-Wise Expense Ledger</h3>
+                <p class="card-subtitle">Comprehensive breakdown of all expenses for the selected timeframe</p>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="custom-table" id="reportCategoryTable">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th class="text-center">Transactions Count</th>
+                            <th class="text-right">Total Amount (PKR)</th>
+                            <th class="text-center" style="width: 200px;">Share of Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportCategoryTableBody">
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">Loading category analysis...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentReportTimeframe = 'monthly';
+
+    function setTimeframe(tf, btn) {
+        currentReportTimeframe = tf;
+        document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Toggle year selector visibility if appropriate
+        const yearSelector = document.getElementById('yearSelectorContainer');
+        if (tf === 'monthly') {
+            yearSelector.style.display = 'flex';
+        } else {
+            yearSelector.style.display = 'none';
+        }
+
+        loadReportsData();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date();
+        document.getElementById('reportYearSelect').value = today.getFullYear();
+        loadReportsData();
+    });
+</script>
+{% endblock %}

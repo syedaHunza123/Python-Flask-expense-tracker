@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Budget Management - ExpenseTracker PKR{% endblock %}
+{% block page_title %}Monthly Budget Planner{% endblock %}
+{% block page_subtitle %}Plan category limits, prevent overspending, and monitor your limits in PKR{% endblock %}
+
+{% block content %}
+<div class="budget-container">
+
+    <!-- Month Selector Bar & Quick Actions -->
+    <div class="budget-header-bar">
+        <div class="budget-date-selector">
+            <label class="date-selector-label"><i class="fa-solid fa-calendar"></i> Select Period:</label>
+            <select id="budgetMonthSelect" class="form-control" onchange="loadBudgetsData()">
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+            </select>
+            <input type="number" id="budgetYearSelect" class="form-control" value="{{ current_year }}" min="2020" max="2099" style="width: 110px;" onchange="loadBudgetsData()">
+        </div>
+
+        <button class="btn btn-primary" onclick="openBudgetModal()">
+            <i class="fa-solid fa-plus"></i> Set Category Budget
+        </button>
+    </div>
+
+    <!-- Monthly Budget High-Level Summary Cards -->
+    <div class="metrics-grid">
+        <!-- Total Budget Card -->
+        <div class="metric-card card-balance">
+            <div class="metric-card-inner">
+                <div class="metric-info">
+                    <span class="metric-label">Total Allocated Budget</span>
+                    <h2 class="metric-value" id="budgetTotalAllocated">Rs. 0.00</h2>
+                    <div class="metric-subtext">
+                        <span class="subtext-muted" id="budgetMonthLabel">{{ current_month }}/{{ current_year }}</span>
+                    </div>
+                </div>
+                <div class="metric-icon-wrap icon-balance">
+                    <i class="fa-solid fa-bullseye"></i>
+                </div>
+            </div>
+            <div class="metric-card-progress">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill fill-blue" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Spent Card -->
+        <div class="metric-card card-expense">
+            <div class="metric-card-inner">
+                <div class="metric-info">
+                    <span class="metric-label">Total Spent This Month</span>
+                    <h2 class="metric-value text-danger" id="budgetTotalSpent">Rs. 0.00</h2>
+                    <div class="metric-subtext">
+                        <span class="badge" id="overallBudgetUsageBadge">0% Used</span>
+                    </div>
+                </div>
+                <div class="metric-icon-wrap icon-expense">
+                    <i class="fa-solid fa-fire"></i>
+                </div>
+            </div>
+            <div class="metric-card-progress">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill fill-red" id="overallSpentProgressBar" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Remaining Budget Card -->
+        <div class="metric-card card-income">
+            <div class="metric-card-inner">
+                <div class="metric-info">
+                    <span class="metric-label">Remaining Safe Budget</span>
+                    <h2 class="metric-value text-success" id="budgetTotalRemaining">Rs. 0.00</h2>
+                    <div class="metric-subtext">
+                        <span class="subtext-muted" id="budgetStatusNotice">Within safe limit</span>
+                    </div>
+                </div>
+                <div class="metric-icon-wrap icon-income">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+            </div>
+            <div class="metric-card-progress">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill fill-green" id="overallRemainingProgressBar" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overall Budget Warning Box (When close to or exceeded budget) -->
+    <div class="alert-box-warning d-none" id="budgetExceededAlert">
+        <div class="alert-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="alert-content">
+            <h4 class="alert-heading" id="budgetWarningTitle">Budget Warning Alert!</h4>
+            <p class="alert-message" id="budgetWarningText">You have exceeded or are near the spending limit for this period.</p>
+        </div>
+    </div>
+
+    <!-- Category Budgets Grid -->
+    <div class="content-card mt-4">
+        <div class="card-header">
+            <div class="card-title-group">
+                <h3 class="card-title">Category-wise Spending & Budget Progress</h3>
+                <p class="card-subtitle">Real-time tracking of each expense category against set caps</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Grid of Category Budget Cards -->
+            <div class="category-budgets-grid" id="categoryBudgetsContainer">
+                <div class="loading-spinner text-center py-5">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                    <span>Loading budget metrics...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date();
+        document.getElementById('budgetMonthSelect').value = today.getMonth() + 1;
+        document.getElementById('budgetYearSelect').value = today.getFullYear();
+        loadBudgetsData();
+    });
+</script>
+{% endblock %}

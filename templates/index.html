@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}FinTrack - Modern Expense Tracker in PKR{% endblock %}
+{% block page_title %}Welcome to FinTrack PKR{% endblock %}
+{% block page_subtitle %}Smart, professional, and private financial management{% endblock %}
+
+{% block content %}
+<div class="welcome-container">
+    <div class="welcome-hero-card">
+        <div class="welcome-hero-content">
+            <div class="welcome-badge">
+                <i class="fa-solid fa-shield-halved"></i> 100% Private • Local SQLite Storage
+            </div>
+            <h1 class="welcome-title">Take Full Control of Your Finances in Pakistani Rupees (Rs.)</h1>
+            <p class="welcome-desc">
+                FinTrack empowers you to track daily expenses, record multiple income streams, set smart monthly category budgets, and analyze spending patterns with real-time interactive charts.
+            </p>
+            <div class="welcome-actions">
+                <a href="{{ url_for('dashboard_page') }}" class="btn btn-primary btn-lg">
+                    <i class="fa-solid fa-chart-pie"></i> Open Live Dashboard
+                </a>
+                <button class="btn btn-outline-success btn-lg" onclick="openAddModal('income')">
+                    <i class="fa-solid fa-circle-arrow-down"></i> Record Income
+                </button>
+                <button class="btn btn-outline-primary btn-lg" onclick="openAddModal('expense')">
+                    <i class="fa-solid fa-circle-arrow-up"></i> Record Expense
+                </button>
+            </div>
+        </div>
+        <div class="welcome-hero-graphic">
+            <div class="graphic-stat-box box-1">
+                <i class="fa-solid fa-wallet"></i>
+                <span class="box-label">Currency</span>
+                <span class="box-value">PKR (Rs.)</span>
+            </div>
+            <div class="graphic-stat-box box-2">
+                <i class="fa-solid fa-chart-line"></i>
+                <span class="box-label">Analytics</span>
+                <span class="box-value">Real-Time</span>
+            </div>
+            <div class="graphic-stat-box box-3">
+                <i class="fa-solid fa-bullseye"></i>
+                <span class="box-label">Budget Guard</span>
+                <span class="box-value">Overspending Alerts</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Quick Jump Cards -->
+    <div class="feature-cards-grid mt-4">
+        <a href="{{ url_for('dashboard_page') }}" class="feature-card">
+            <div class="feature-icon bg-soft-blue"><i class="fa-solid fa-chart-pie"></i></div>
+            <h3 class="feature-title">Live Dashboard</h3>
+            <p class="feature-text">High-level financial overview, recent activities, monthly savings rate, and category breakdowns.</p>
+            <span class="feature-link">Explore Dashboard &rarr;</span>
+        </a>
+
+        <a href="{{ url_for('transactions_page') }}" class="feature-card">
+            <div class="feature-icon bg-soft-green"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+            <h3 class="feature-title">Transactions Ledger</h3>
+            <p class="feature-text">Search, sort, filter by category or date range, edit records, and export everything to CSV.</p>
+            <span class="feature-link">Manage Transactions &rarr;</span>
+        </a>
+
+        <a href="{{ url_for('budget_page') }}" class="feature-card">
+            <div class="feature-icon bg-soft-purple"><i class="fa-solid fa-bullseye"></i></div>
+            <h3 class="feature-title">Budget Manager</h3>
+            <p class="feature-text">Set category limits for Food, Transport, Bills, and more. Get automatic warning alerts when exceeded.</p>
+            <span class="feature-link">Set Budgets &rarr;</span>
+        </a>
+
+        <a href="{{ url_for('reports_page') }}" class="feature-card">
+            <div class="feature-icon bg-soft-red"><i class="fa-solid fa-chart-line"></i></div>
+            <h3 class="feature-title">Analytics & Reports</h3>
+            <p class="feature-text">Daily, weekly, monthly, and yearly cash flow charts with interactive category-wise spending analysis.</p>
+            <span class="feature-link">View Reports &rarr;</span>
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Financial Overview{% endblock %}
+{% block page_title %}Financial Dashboard{% endblock %}
+{% block page_subtitle %}Live summary of your income, expenses, and monthly budget{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <!-- Top Financial Metrics Cards -->
+    <div class="metrics-grid">
+        <!-- Total Balance Card -->
+        <div class="metric-card card-balance">
+            <div class="metric-card-inner">
+                <div class="metric-info">
+                    <span class="metric-label">Net Balance</span>
+                    <h2 class="metric-value" id="totalBalanceVal">Rs. 0.00</h2>
+                    <div class="metric-subtext">
+                        <span class="badge badge-light-blue" id="balanceStatusBadge">
+                            <i class="fa-solid fa-scale-balanced"></i> All Time
+                        </span>
+                    </div>
+                </div>
+                <div class="metric-icon-wrap icon-balance">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+            </div>
+            <div class="metric-card-progress">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill fill-blue" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Income Card -->
+        <div class="metric-card card-income">
+            <div class="metric-card-inner">
+                <div class="metric-info">
+                    <span class="metric-label">Total Income</span>
+                    <h2 class="metric-value text-success" id="totalIncomeVal">Rs. 0.00</h2>
+                    <div class="metric-subtext">
+                        <span class="subtext-muted">This Month: <strong id="monthIncomeVal">Rs. 0</strong></span>
+                    </div>
+                </div>
+                <div class="metric-icon-wrap icon-income">
+                    <i class="fa-solid fa-arrow-down-long"></i>
+                </div>
+            </div>
+            <div class="metric-card-progress">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill fill-green" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Expenses Card -->
+        <div class="metric-card card-expense">
+            <div class="metric-card-inner">
+                <div class="metric-info">
+                    <span class="metric-label">Total Expenses</span>
+                    <h2 class="metric-value text-danger" id="totalExpenseVal">Rs. 0.00</h2>
+                    <div class="metric-subtext">
+                        <span class="subtext-muted">This Month: <strong id="monthExpenseVal">Rs. 0</strong></span>
+                    </div>
+                </div>
+                <div class="metric-icon-wrap icon-expense">
+                    <i class="fa-solid fa-arrow-up-long"></i>
+                </div>
+            </div>
+            <div class="metric-card-progress">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill fill-red" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Savings Card -->
+        <div class="metric-card card-savings">
+            <div class="metric-card-inner">
+                <div class="metric-info">
+                    <span class="metric-label">Monthly Savings</span>
+                    <h2 class="metric-value text-primary" id="monthSavingsVal">Rs. 0.00</h2>
+                    <div class="metric-subtext">
+                        <span class="badge" id="savingsRateBadge">
+                            <i class="fa-solid fa-piggy-bank"></i> 0% Rate
+                        </span>
+                    </div>
+                </div>
+                <div class="metric-icon-wrap icon-savings">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                </div>
+            </div>
+            <div class="metric-card-progress">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill fill-accent" id="savingsBarFill" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Month Budget Alert Banner (Dynamically shown if budget set or exceeded) -->
+    <div class="budget-alert-banner d-none" id="dashboardBudgetBanner">
+        <div class="budget-alert-content">
+            <div class="alert-icon-wrap" id="budgetBannerIcon">
+                <i class="fa-solid fa-bell"></i>
+            </div>
+            <div class="alert-text-wrap">
+                <h4 class="alert-title" id="budgetBannerTitle">Monthly Budget Overview</h4>
+                <p class="alert-desc" id="budgetBannerDesc">Loading budget status...</p>
+            </div>
+        </div>
+        <div class="budget-alert-meter">
+            <div class="budget-meter-label">
+                <span id="budgetSpentText">Rs. 0 spent</span>
+                <span id="budgetTotalText">of Rs. 0</span>
+            </div>
+            <div class="meter-bar-container">
+                <div class="meter-bar-fill" id="budgetBannerBar" style="width: 0%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section: 2 Columns -->
+    <div class="dashboard-grid-2">
+        <!-- Income vs Expenses Bar Chart -->
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <h3 class="card-title">Income vs Expenses</h3>
+                    <p class="card-subtitle">Monthly cash flow comparison (Last 6 Months)</p>
+                </div>
+                <div class="card-actions">
+                    <span class="legend-badge legend-inc"><span class="dot green-dot"></span> Income</span>
+                    <span class="legend-badge legend-exp"><span class="dot red-dot"></span> Expense</span>
+                </div>
+            </div>
+            <div class="card-body chart-body">
+                <div class="chart-canvas-wrapper">
+                    <canvas id="incomeVsExpenseChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expense Category Breakdown Doughnut Chart -->
+        <div class="content-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <h3 class="card-title">Expense Category Breakdown</h3>
+                    <p class="card-subtitle">Where your money went this month</p>
+                </div>
+                <div class="card-actions">
+                    <a href="{{ url_for('reports_page') }}" class="btn-link">View Full Analysis &rarr;</a>
+                </div>
+            </div>
+            <div class="card-body chart-body category-breakdown-body">
+                <div class="donut-wrapper">
+                    <canvas id="categoryDonutChart"></canvas>
+                </div>
+                <div class="category-legend-list" id="dashboardCategoryList">
+                    <!-- Populated dynamically -->
+                    <div class="empty-state-mini">
+                        <i class="fa-solid fa-chart-pie text-muted"></i>
+                        <p>No expense data for this month</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Section: Recent Transactions & Financial Summary -->
+    <div class="dashboard-grid-bottom">
+        <!-- Recent Transactions Card -->
+        <div class="content-card recent-trans-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <h3 class="card-title">Recent Transactions</h3>
+                    <p class="card-subtitle">Latest activity across all accounts</p>
+                </div>
+                <div class="card-actions">
+                    <a href="{{ url_for('transactions_page') }}" class="btn btn-outline-primary btn-sm">
+                        View All Transactions
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="custom-table" id="recentTransTable">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th class="text-right">Amount (PKR)</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentTransBody">
+                            <!-- Populated dynamically via JS -->
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="loading-spinner">
+                                        <i class="fa-solid fa-circle-notch fa-spin"></i>
+                                        <span>Loading transactions...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Month Financial Summary Widget -->
+        <div class="content-card summary-card">
+            <div class="card-header">
+                <div class="card-title-group">
+                    <h3 class="card-title">Monthly Summary</h3>
+                    <p class="card-subtitle" id="currentMonthYearLabel">Current Month</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="summary-list">
+                    <div class="summary-item">
+                        <div class="summary-item-icon bg-soft-green">
+                            <i class="fa-solid fa-circle-arrow-down text-success"></i>
+                        </div>
+                        <div class="summary-item-info">
+                            <span class="summary-label">Income Received</span>
+                            <span class="summary-val text-success" id="sumMonthIncome">Rs. 0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-item">
+                        <div class="summary-item-icon bg-soft-red">
+                            <i class="fa-solid fa-circle-arrow-up text-danger"></i>
+                        </div>
+                        <div class="summary-item-info">
+                            <span class="summary-label">Total Spent</span>
+                            <span class="summary-val text-danger" id="sumMonthExpense">Rs. 0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-item">
+                        <div class="summary-item-icon bg-soft-blue">
+                            <i class="fa-solid fa-piggy-bank text-primary"></i>
+                        </div>
+                        <div class="summary-item-info">
+                            <span class="summary-label">Net Savings</span>
+                            <span class="summary-val text-primary" id="sumMonthSavings">Rs. 0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-item">
+                        <div class="summary-item-icon bg-soft-purple">
+                            <i class="fa-solid fa-bullseye text-purple"></i>
+                        </div>
+                        <div class="summary-item-info">
+                            <span class="summary-label">Monthly Budget</span>
+                            <span class="summary-val" id="sumMonthBudget">Rs. 0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="summary-card-cta mt-4">
+                    <a href="{{ url_for('budget_page') }}" class="btn btn-outline-primary btn-block">
+                        <i class="fa-solid fa-sliders"></i> Adjust Monthly Budget
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize Dashboard data when DOM loads
+    document.addEventListener('DOMContentLoaded', function() {
+        initDashboard();
+    });
+</script>
+{% endblock %}
